@@ -1,5 +1,5 @@
 import rawData from "@/data/screenings.json";
-import type { Filters, Screening, ScheduleData, TimeOfDay, Venue, VenueId } from "./types";
+import type { DayType, Filters, Screening, ScheduleData, TimeOfDay, Venue, VenueId } from "./types";
 
 const data = rawData as ScheduleData;
 
@@ -9,6 +9,17 @@ export const SCREENINGS: Screening[] = data.screenings;
 export const VENUE_BY_ID: Record<VenueId, Venue> = Object.fromEntries(
   VENUES.map((v) => [v.id, v]),
 ) as Record<VenueId, Venue>;
+
+const SCREENING_COUNT_BY_TITLE: Map<string, number> = (() => {
+  const counts = new Map<string, number>();
+  for (const s of SCREENINGS) counts.set(s.title, (counts.get(s.title) ?? 0) + 1);
+  return counts;
+})();
+
+/** True when a movie has exactly one screening in the whole festival — miss it, miss it for good. */
+export function isSingleScreening(title: string): boolean {
+  return SCREENING_COUNT_BY_TITLE.get(title) === 1;
+}
 
 export const TIME_OF_DAY_LABEL: Record<TimeOfDay, string> = {
   morning: "เช้า",
@@ -36,6 +47,18 @@ export function timeOfDay(time: string): TimeOfDay {
   if (minutes < 17 * 60) return "afternoon";
   if (minutes < 20 * 60) return "evening";
   return "late";
+}
+
+export const DAY_TYPE_LABEL: Record<DayType, string> = {
+  weekday: "วันธรรมดา",
+  weekend: "เสาร์-อาทิตย์",
+};
+
+/** Sat/Sun -> "weekend", else "weekday". Parses the ISO date as local calendar fields to avoid UTC-shift bugs. */
+export function dayType(date: string): DayType {
+  const [y, m, d] = date.split("-").map(Number);
+  const weekday = new Date(y, m - 1, d).getDay();
+  return weekday === 0 || weekday === 6 ? "weekend" : "weekday";
 }
 
 /** All distinct movie titles, sorted alphabetically (locale-aware for Thai + Latin). */
@@ -85,6 +108,7 @@ export const EMPTY_FILTERS: Filters = {
   venueIds: [],
   theatersByVenue: {},
   timesOfDay: [],
+  dayTypes: [],
   wantedTitles: [],
   onlyPlanned: false,
 };
@@ -102,6 +126,9 @@ export function matchesFilters(
     return false;
   }
   if (filters.timesOfDay.length > 0 && !filters.timesOfDay.includes(timeOfDay(screening.time))) {
+    return false;
+  }
+  if (filters.dayTypes.length > 0 && !filters.dayTypes.includes(dayType(screening.date))) {
     return false;
   }
   if (filters.wantedTitles.length > 0 && !filters.wantedTitles.includes(screening.title)) {
@@ -180,6 +207,15 @@ export function findConflictingPlanned(
   planned: Screening[],
 ): Screening | undefined {
   return planned.find((p) => overlaps(candidate, p));
+}
+
+/**
+ * The first already-planned screening of the same movie as `candidate`, ignoring
+ * itself — a soft warning (not a block), since re-watching a film or catching it
+ * at a second Q&A can be intentional, unlike a hard time conflict.
+ */
+export function findDuplicateTitle(candidate: Screening, planned: Screening[]): Screening | undefined {
+  return planned.find((p) => p.id !== candidate.id && p.title === candidate.title);
 }
 
 /**

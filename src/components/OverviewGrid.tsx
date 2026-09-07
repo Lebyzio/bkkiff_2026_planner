@@ -1,7 +1,15 @@
 "use client";
 
 import { formatDateShort } from "@/lib/format";
-import { dateLabels, findConflictingPlanned, findTightTransition, SCREENINGS, screeningsFor, VENUES } from "@/lib/schedule";
+import {
+  dateLabels,
+  findConflictingPlanned,
+  findDuplicateTitle,
+  findTightTransition,
+  SCREENINGS,
+  screeningsFor,
+  VENUES,
+} from "@/lib/schedule";
 import { usePlannedScreenings } from "@/lib/usePlan";
 import { MiniScreeningChip } from "./MiniScreeningChip";
 
@@ -73,6 +81,7 @@ export function OverviewGrid() {
                           onToggle={toggle}
                           lockedBy={isPlanned ? undefined : findConflictingPlanned(s, plannedScreenings)}
                           tightTransition={findTightTransition(s, plannedScreenings)}
+                          duplicateTitle={findDuplicateTitle(s, plannedScreenings)}
                         />
                       );
                     })}

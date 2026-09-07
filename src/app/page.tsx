@@ -59,7 +59,7 @@ export default function CreatePlanPage() {
             แผนของฉัน: {plannedScreenings.length} รอบฉาย · รวม {formatDuration(totalPlannedMinutes)}
           </>
         ) : (
-          "ข้อมูลตารางฉายจาก BKKIFF 2026 (อัพเดตเมื่อวันที่ 7 กันยายน 2569) - Lebyzio"
+          "ข้อมูลตารางฉายจาก BKKIFF 2026 (อัพเดตเมื่อวันที่ 7 กันยายน 2569 เวลา 23:00 น.) - Lebyzio"
         )}
       </footer>
     </div>

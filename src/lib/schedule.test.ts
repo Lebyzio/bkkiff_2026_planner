@@ -6,11 +6,14 @@ import {
   allDates,
   allMovieTitles,
   dateLabels,
+  dayType,
   filterScreenings,
   findConflictingPlanned,
   findConflicts,
+  findDuplicateTitle,
   findTightTransition,
   groupByDate,
+  isSingleScreening,
   matchesFilters,
   overlaps,
   screeningsFor,
@@ -30,6 +33,7 @@ function makeScreening(overrides: Partial<Screening>): Screening {
     time: "18:00",
     endTime: "20:00",
     title: "Test Movie",
+    year: 2026,
     venueId: "iconsiam",
     theater: "Theater 5",
     durationMin: 120,
@@ -77,6 +81,18 @@ describe("toMinutes / timeOfDay", () => {
   });
 });
 
+describe("dayType", () => {
+  it("classifies Saturday and Sunday as weekend", () => {
+    expect(dayType("2026-09-13")).toBe("weekend"); // Sunday
+    expect(dayType("2026-09-19")).toBe("weekend"); // Saturday
+  });
+
+  it("classifies Monday through Friday as weekday", () => {
+    expect(dayType("2026-09-14")).toBe("weekday"); // Monday
+    expect(dayType("2026-09-18")).toBe("weekday"); // Friday
+  });
+});
+
 describe("allMovieTitles / allDates", () => {
   it("returns unique, sorted titles", () => {
     const titles = allMovieTitles();
@@ -117,6 +133,20 @@ describe("matchesFilters", () => {
     expect(
       matchesFilters(screening, { ...EMPTY_FILTERS, timesOfDay: ["morning"] }, planned),
     ).toBe(false);
+  });
+
+  it("filters by weekday/weekend", () => {
+    const weekdayScreening = makeScreening({ id: "a", date: "2026-09-14" }); // Monday
+    const weekendScreening = makeScreening({ id: "b", date: "2026-09-13" }); // Sunday
+    expect(
+      matchesFilters(weekdayScreening, { ...EMPTY_FILTERS, dayTypes: ["weekday"] }, planned),
+    ).toBe(true);
+    expect(
+      matchesFilters(weekendScreening, { ...EMPTY_FILTERS, dayTypes: ["weekday"] }, planned),
+    ).toBe(false);
+    expect(
+      matchesFilters(weekendScreening, { ...EMPTY_FILTERS, dayTypes: ["weekend"] }, planned),
+    ).toBe(true);
   });
 
   it("filters by wanted movie titles", () => {
@@ -244,7 +274,7 @@ describe("theatersForVenue", () => {
 
   it("includes every distinct theater a venue uses", () => {
     expect(theatersForVenue("iconsiam")).toEqual(
-      expect.arrayContaining(["Theater 2", "Theater 5", "Theater IMAX"]),
+      expect.arrayContaining(["Theater 2/5/6", "Theater 5", "Theater IMAX"]),
     );
   });
 });
@@ -294,6 +324,40 @@ describe("findConflictingPlanned", () => {
   it("ignores itself when the candidate is already in the planned list", () => {
     const p1 = makeScreening({ id: "p1", date: "2026-09-14", time: "18:00", endTime: "20:00" });
     expect(findConflictingPlanned(p1, [p1])).toBeUndefined();
+  });
+});
+
+describe("findDuplicateTitle", () => {
+  it("returns the other planned screening with the same title", () => {
+    const planned = [makeScreening({ id: "p1", title: "Rose", date: "2026-09-14", time: "18:00" })];
+    const candidate = makeScreening({ id: "c1", title: "Rose", date: "2026-09-20", time: "20:00" });
+    expect(findDuplicateTitle(candidate, planned)?.id).toBe("p1");
+  });
+
+  it("returns undefined when no planned screening shares the title", () => {
+    const planned = [makeScreening({ id: "p1", title: "Rose" })];
+    const candidate = makeScreening({ id: "c1", title: "Blaise" });
+    expect(findDuplicateTitle(candidate, planned)).toBeUndefined();
+  });
+
+  it("ignores itself when the candidate is already in the planned list", () => {
+    const p1 = makeScreening({ id: "p1", title: "Rose" });
+    expect(findDuplicateTitle(p1, [p1])).toBeUndefined();
+  });
+});
+
+describe("isSingleScreening", () => {
+  it("is true for a title that appears exactly once in the real dataset", () => {
+    const counts = new Map<string, number>();
+    for (const s of SCREENINGS) counts.set(s.title, (counts.get(s.title) ?? 0) + 1);
+    const [singleTitle] = [...counts.entries()].find(([, count]) => count === 1)!;
+    const [repeatedTitle] = [...counts.entries()].find(([, count]) => count > 1)!;
+    expect(isSingleScreening(singleTitle)).toBe(true);
+    expect(isSingleScreening(repeatedTitle)).toBe(false);
+  });
+
+  it("is false for a title that doesn't exist at all", () => {
+    expect(isSingleScreening("Not A Real Movie")).toBe(false);
   });
 });
 

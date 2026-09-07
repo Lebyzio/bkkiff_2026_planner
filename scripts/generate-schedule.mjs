@@ -10,7 +10,7 @@ const SOURCE = path.join(
   __dirname,
   "..",
   "BKKIFF_Schedule",
-  "BKKIFF_2026_Schedule.xlsx",
+  "BKKIFF_2026_Schedule_V2.xlsx",
 );
 const OUTPUT = path.join(__dirname, "..", "src", "data", "screenings.json");
 const SHEET_NAME = "รายการฉายทั้งหมด";
@@ -100,7 +100,7 @@ function main() {
   const idCounts = new Map();
 
   for (const row of rows.slice(1)) {
-    const [dateSerial, dayThai, time, title, venueFullName, theater, duration, qna, note] = row;
+    const [dateSerial, dayThai, time, title, year, venueFullName, theater, duration, qna, note] = row;
     if (dateSerial == null || !title || typeof dateSerial !== "number") continue;
 
     const date = excelSerialToISODate(dateSerial);
@@ -119,6 +119,7 @@ function main() {
       time,
       endTime: durationMin != null ? addMinutesToTime(time, durationMin) : null,
       title,
+      year: typeof year === "number" ? year : null,
       venueId: venue.id,
       theater: theater && theater !== "-" ? theater : null,
       durationMin,

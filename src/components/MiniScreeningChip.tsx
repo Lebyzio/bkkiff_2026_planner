@@ -1,6 +1,7 @@
 "use client";
 
-import type { TightTransition } from "@/lib/schedule";
+import { titleWithYear } from "@/lib/format";
+import { isSingleScreening, type TightTransition } from "@/lib/schedule";
 import type { Screening, Venue } from "@/lib/types";
 
 interface MiniScreeningChipProps {
@@ -13,6 +14,8 @@ interface MiniScreeningChipProps {
   lockedBy?: Screening;
   /** Set when picking/keeping this screening leaves little time to reach another venue — a warning, not a block. */
   tightTransition?: TightTransition;
+  /** Set when this movie already has a different screening in the plan — a warning, not a block. */
+  duplicateTitle?: Screening;
 }
 
 export function MiniScreeningChip({
@@ -23,16 +26,21 @@ export function MiniScreeningChip({
   onToggle,
   lockedBy,
   tightTransition,
+  duplicateTitle,
 }: MiniScreeningChipProps) {
   const titleSuffix = screening.note ? (screening.note === "Opening Ceremony" ? " · พิธีเปิด" : " · พิธีปิด") : "";
   const isLocked = !isPlanned && Boolean(lockedBy);
   const showTransitionWarning = !isLocked && Boolean(tightTransition);
+  const showDuplicateWarning = !isLocked && Boolean(duplicateTitle);
+  const singleScreening = isSingleScreening(screening.title);
 
   const title = isLocked
     ? `ทับเวลากับ "${lockedBy?.title}" (${lockedBy?.time}) ที่เลือกไว้แล้ว`
     : showTransitionWarning
       ? `เหลือเวลาเปลี่ยนโรงแค่ ${tightTransition?.gapMinutes} นาที ก่อน/หลัง "${tightTransition?.screening.title}" (${tightTransition?.screening.time})`
-      : `${screening.time} ${screening.title}${screening.theater ? ` · ${screening.theater}` : ""}${screening.qna ? " · Q&A ผู้กำกับ" : ""}`;
+      : showDuplicateWarning
+        ? `"${duplicateTitle?.title}" อยู่ในแผนแล้ว (${duplicateTitle?.time})`
+        : `${screening.time} ${titleWithYear(screening.title, screening.year)}${screening.theater ? ` · ${screening.theater}` : ""}${screening.qna ? " · Q&A ผู้กำกับ" : ""}${singleScreening ? " · รอบเดียว" : ""}`;
 
   return (
     <button
@@ -57,7 +65,12 @@ export function MiniScreeningChip({
             style={{ backgroundColor: "var(--color-qna)" }}
           />
         )}
-        {showTransitionWarning && (
+        {singleScreening && (
+          <span aria-hidden className="shrink-0 text-[9px]" style={{ color: "var(--color-rare)" }}>
+            ★
+          </span>
+        )}
+        {(showTransitionWarning || showDuplicateWarning) && (
           <span aria-hidden className="shrink-0 text-[9px]">
             ⚠
           </span>
@@ -70,7 +83,7 @@ export function MiniScreeningChip({
         {isLocked && <span className="ml-auto shrink-0 text-[10px]">🔒</span>}
       </span>
       <span className="block truncate text-[11px] leading-tight text-text">
-        {screening.title}
+        {titleWithYear(screening.title, screening.year)}
         {titleSuffix}
       </span>
     </button>

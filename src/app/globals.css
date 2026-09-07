@@ -14,6 +14,8 @@
   --color-qna: #e0263f;
   --color-warning: #f2994a;
   --color-warning-ink: #3a1f04;
+  --color-rare: #4fb6e8;
+  --color-rare-ink: #06202b;
 }
 
 @theme inline {
@@ -30,6 +32,8 @@
   --color-qna: var(--color-qna);
   --color-warning: var(--color-warning);
   --color-warning-ink: var(--color-warning-ink);
+  --color-rare: var(--color-rare);
+  --color-rare-ink: var(--color-rare-ink);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);

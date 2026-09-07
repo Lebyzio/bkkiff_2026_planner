@@ -1,9 +1,12 @@
 "use client";
 
-import { formatDuration } from "@/lib/format";
+import { formatDuration, titleWithYear } from "@/lib/format";
+import { isSingleScreening } from "@/lib/schedule";
 import type { TightTransition } from "@/lib/schedule";
 import type { Screening, Venue } from "@/lib/types";
+import { DuplicateTitleBadge } from "./DuplicateTitleBadge";
 import { QnaBadge } from "./QnaBadge";
+import { SingleScreeningBadge } from "./SingleScreeningBadge";
 import { TransitionWarningBadge } from "./TransitionWarningBadge";
 
 interface ScreeningTicketProps {
@@ -16,6 +19,8 @@ interface ScreeningTicketProps {
   lockedBy?: Screening;
   /** Set when picking/keeping this screening leaves little time to reach another venue — a warning, not a block. */
   tightTransition?: TightTransition;
+  /** Set when this movie already has a different screening in the plan — a warning, not a block. */
+  duplicateTitle?: Screening;
 }
 
 export function ScreeningTicket({
@@ -26,9 +31,12 @@ export function ScreeningTicket({
   conflictCount = 0,
   lockedBy,
   tightTransition,
+  duplicateTitle,
 }: ScreeningTicketProps) {
   const hasConflict = isPlanned && conflictCount > 0;
   const isLocked = !isPlanned && Boolean(lockedBy);
+  const showDuplicateWarning = !isLocked && Boolean(duplicateTitle);
+  const singleScreening = isSingleScreening(screening.title);
 
   return (
     <div
@@ -55,7 +63,7 @@ export function ScreeningTicket({
       <div className="ticket-perforation flex flex-1 items-center justify-between gap-3 px-4 py-3">
         <div className="min-w-0">
           <p className="line-clamp-2 min-h-[3.5rem] font-display text-xl leading-7 tracking-wide text-text">
-            {screening.title}
+            {titleWithYear(screening.title, screening.year)}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
             <span className="inline-flex items-center gap-1.5">
@@ -65,7 +73,12 @@ export function ScreeningTicket({
             {screening.theater && <span>· {screening.theater}</span>}
             <span>· {formatDuration(screening.durationMin)}</span>
           </div>
-          {(screening.qna || screening.note || hasConflict || (!isLocked && tightTransition)) && (
+          {(screening.qna ||
+            screening.note ||
+            hasConflict ||
+            singleScreening ||
+            (!isLocked && tightTransition) ||
+            showDuplicateWarning) && (
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {screening.note && (
                 <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-ink">
@@ -73,6 +86,7 @@ export function ScreeningTicket({
                 </span>
               )}
               {screening.qna && <QnaBadge />}
+              {singleScreening && <SingleScreeningBadge />}
               {hasConflict && (
                 <span
                   className="rounded-full px-2 py-0.5 text-[11px] font-medium"
@@ -82,6 +96,7 @@ export function ScreeningTicket({
                 </span>
               )}
               {!isLocked && tightTransition && <TransitionWarningBadge transition={tightTransition} />}
+              {showDuplicateWarning && <DuplicateTitleBadge duplicate={duplicateTitle!} />}
             </div>
           )}
           {isLocked && lockedBy && (

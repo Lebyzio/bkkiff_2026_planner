@@ -21,7 +21,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BKKIFF Planner",
+  title: "BKKIFF 2026 Planner",
   description: "วางแผนดูหนังเทศกาล Bangkok International Film Festival",
 };
 

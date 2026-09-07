@@ -5,6 +5,8 @@ interface HeaderProps {
   onOpenPlan: () => void;
 }
 
+const VERSION = "1.0.1"; // Updated on 07/09/2026 23:00
+
 export function Header({ plannedCount, onOpenPlan }: HeaderProps) {
   return (
     <header className="border-b border-accent/30 bg-bg">
@@ -12,10 +14,10 @@ export function Header({ plannedCount, onOpenPlan }: HeaderProps) {
         <div>
           <h1 className="flex items-baseline gap-2 font-display leading-none tracking-wide text-text">
             <span className="text-3xl text-accent sm:text-4xl">BKKIFF</span>
-            <span className="text-lg text-text-muted sm:text-xl">PLANNER</span>
+            <span className="text-lg text-text-muted sm:text-xl">PLANNER {VERSION}</span>
           </h1>
           <p className="mt-1 text-xs text-text-muted sm:text-sm">
-            Bangkok International Film Festival 2026 · 13–27 กันยายน
+            Bangkok International Film Festival 2026 · 13 - 27 กันยายน
           </p>
         </div>
 

@@ -33,3 +33,8 @@ export function formatDuration(minutes: number | null): string {
   if (m === 0) return `${h} ชม.`;
   return `${h} ชม. ${m} นาที`;
 }
+
+/** "Rose" + 2023 -> "Rose (2023)"; falls back to the bare title when the year is unknown (e.g. anthology programmes). */
+export function titleWithYear(title: string, year: number | null): string {
+  return year != null ? `${title} (${year})` : title;
+}

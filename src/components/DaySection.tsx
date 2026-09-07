@@ -1,5 +1,5 @@
 import { formatDateHeading } from "@/lib/format";
-import { findConflictingPlanned, findTightTransition, VENUE_BY_ID } from "@/lib/schedule";
+import { findConflictingPlanned, findDuplicateTitle, findTightTransition, VENUE_BY_ID } from "@/lib/schedule";
 import type { Screening } from "@/lib/types";
 import { ScreeningTicket } from "./ScreeningTicket";
 
@@ -44,6 +44,7 @@ export function DaySection({
               conflictCount={conflicts.get(screening.id)?.length ?? 0}
               lockedBy={isPlanned ? undefined : findConflictingPlanned(screening, plannedScreenings)}
               tightTransition={findTightTransition(screening, plannedScreenings)}
+              duplicateTitle={findDuplicateTitle(screening, plannedScreenings)}
             />
           );
         })}

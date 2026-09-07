@@ -1,10 +1,11 @@
 "use client";
 
-import { TIME_OF_DAY_LABEL, TIME_OF_DAY_RANGE, theatersForVenue, VENUES } from "@/lib/schedule";
-import type { Filters, TimeOfDay, VenueId } from "@/lib/types";
+import { DAY_TYPE_LABEL, TIME_OF_DAY_LABEL, TIME_OF_DAY_RANGE, theatersForVenue, VENUES } from "@/lib/schedule";
+import type { DayType, Filters, TimeOfDay, VenueId } from "@/lib/types";
 import { MovieFilterCombobox } from "./MovieFilterCombobox";
 
 const TIME_OPTIONS: TimeOfDay[] = ["morning", "afternoon", "evening", "late"];
+const DAY_TYPE_OPTIONS: DayType[] = ["weekday", "weekend"];
 
 interface FilterBarProps {
   filters: Filters;
@@ -27,6 +28,7 @@ export function FilterBar({ filters, setFilters, allTitles, resultCount, onReset
     filters.venueIds.length +
     theaterFilterCount +
     filters.timesOfDay.length +
+    filters.dayTypes.length +
     filters.wantedTitles.length +
     (filters.onlyPlanned ? 1 : 0);
 
@@ -52,6 +54,10 @@ export function FilterBar({ filters, setFilters, allTitles, resultCount, onReset
 
   function toggleTime(t: TimeOfDay) {
     setFilters((prev) => ({ ...prev, timesOfDay: toggleInArray(prev.timesOfDay, t) }));
+  }
+
+  function toggleDayType(d: DayType) {
+    setFilters((prev) => ({ ...prev, dayTypes: toggleInArray(prev.dayTypes, d) }));
   }
 
   return (
@@ -142,6 +148,31 @@ export function FilterBar({ filters, setFilters, allTitles, resultCount, onReset
                     }}
                   >
                     {TIME_OF_DAY_LABEL[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-text-muted">วัน</p>
+            <div className="flex flex-wrap gap-1.5">
+              {DAY_TYPE_OPTIONS.map((d) => {
+                const active = filters.dayTypes.includes(d);
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => toggleDayType(d)}
+                    aria-pressed={active}
+                    className="transition-standard rounded-full border px-3 py-1.5 text-xs font-medium"
+                    style={{
+                      borderColor: active ? "var(--color-accent)" : "var(--color-border)",
+                      backgroundColor: active ? "color-mix(in srgb, var(--color-accent) 18%, transparent)" : "transparent",
+                      color: active ? "var(--color-text)" : "var(--color-text-muted)",
+                    }}
+                  >
+                    {DAY_TYPE_LABEL[d]}
                   </button>
                 );
               })}

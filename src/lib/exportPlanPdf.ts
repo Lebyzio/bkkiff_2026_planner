@@ -1,6 +1,6 @@
-import { formatDateHeading, formatDuration } from "./format";
+import { formatDateHeading, formatDuration, titleWithYear } from "./format";
 import { NOTO_SANS_THAI_REGULAR_BASE64 } from "./pdfFont.generated";
-import { findTightTransition, groupByDate, VENUE_BY_ID } from "./schedule";
+import { findDuplicateTitle, findTightTransition, groupByDate, isSingleScreening, VENUE_BY_ID } from "./schedule";
 import type { TightTransition } from "./schedule";
 import type { Screening } from "./types";
 
@@ -21,13 +21,19 @@ function registerThaiFont(doc: import("jspdf").jsPDF) {
   doc.setFont(FONT_NAME, "normal");
 }
 
-function badgeText(screening: Screening, transition: TightTransition | undefined): string {
+function badgeText(
+  screening: Screening,
+  transition: TightTransition | undefined,
+  duplicate: Screening | undefined,
+): string {
   const tags: string[] = [];
   if (screening.note) tags.push(screening.note === "Opening Ceremony" ? "พิธีเปิด" : "พิธีปิด");
   if (screening.qna) tags.push("Q&A ผู้กำกับ");
+  if (isSingleScreening(screening.title)) tags.push("รอบเดียว");
   if (transition) {
     tags.push(`เปลี่ยนโรงกระชั้นชิด (${transition.gapMinutes} นาที ก่อน/หลัง "${transition.screening.title}")`);
   }
+  if (duplicate) tags.push(`หนังซ้ำในแผน (${duplicate.time})`);
   return tags.join(" · ");
 }
 
@@ -65,11 +71,16 @@ export async function exportPlanPdf(screenings: Screening[], conflicts: Map<stri
   );
 
   const hasAnyTightTransition = screenings.some((s) => findTightTransition(s, screenings));
-  if (hasAnyTightTransition) {
-    doc.text("สีส้ม = เปลี่ยนโรงในเวลากระชั้นชิด (ต่ำกว่า 45 นาที) เผื่อเวลาเดินทางด้วย", margin, 37);
+  const hasAnyDuplicate = screenings.some((s) => findDuplicateTitle(s, screenings));
+  if (hasAnyTightTransition || hasAnyDuplicate) {
+    doc.text(
+      "สีส้ม = เปลี่ยนโรงในเวลากระชั้นชิด (ต่ำกว่า 45 นาที) และ/หรือ หนังเรื่องเดียวกันซ้ำในแผน",
+      margin,
+      37,
+    );
   }
 
-  let cursorY = hasAnyTightTransition ? 44 : 40;
+  let cursorY = hasAnyTightTransition || hasAnyDuplicate ? 44 : 40;
 
   for (const group of groupByDate(screenings)) {
     if (cursorY > pageHeight - 30) {
@@ -86,6 +97,7 @@ export async function exportPlanPdf(screenings: Screening[], conflicts: Map<stri
 
     const conflictFlags = group.screenings.map((s) => (conflicts.get(s.id)?.length ?? 0) > 0);
     const transitions = group.screenings.map((s) => findTightTransition(s, screenings));
+    const duplicates = group.screenings.map((s) => findDuplicateTitle(s, screenings));
 
     autoTable(doc, {
       startY: cursorY + 6,
@@ -115,17 +127,17 @@ export async function exportPlanPdf(screenings: Screening[], conflicts: Map<stri
       head: [["เวลา", "เรื่อง", "โรงหนัง", "ความยาว", "หมายเหตุ"]],
       body: group.screenings.map((s, i) => [
         s.endTime ? `${s.time}-${s.endTime}` : s.time,
-        s.title,
+        titleWithYear(s.title, s.year),
         venueCell(s),
         formatDuration(s.durationMin),
-        badgeText(s, transitions[i]),
+        badgeText(s, transitions[i], duplicates[i]),
       ]),
       didParseCell(data) {
         if (data.section !== "body") return;
         if (conflictFlags[data.row.index]) {
           data.cell.styles.fillColor = CONFLICT_BG;
           data.cell.styles.textColor = CONFLICT_TEXT;
-        } else if (transitions[data.row.index]) {
+        } else if (transitions[data.row.index] || duplicates[data.row.index]) {
           data.cell.styles.fillColor = WARNING_BG;
           data.cell.styles.textColor = WARNING_TEXT;
         }
