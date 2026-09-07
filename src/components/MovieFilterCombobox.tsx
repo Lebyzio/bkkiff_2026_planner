@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { titleWithYear } from "@/lib/format";
+import { yearForTitle } from "@/lib/schedule";
 
 interface MovieFilterComboboxProps {
   allTitles: string[];
@@ -58,7 +60,7 @@ export function MovieFilterCombobox({ allTitles, selected, onChange }: MovieFilt
                 onClick={() => addTitle(title)}
                 className="block w-full truncate px-3 py-2 text-left text-sm text-text hover:bg-bg-ticket"
               >
-                {title}
+                {titleWithYear(title, yearForTitle(title))}
               </button>
             </li>
           ))}
@@ -71,7 +73,7 @@ export function MovieFilterCombobox({ allTitles, selected, onChange }: MovieFilt
               key={title}
               className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-xs text-text"
             >
-              <span className="truncate">{title}</span>
+              <span className="truncate">{titleWithYear(title, yearForTitle(title))}</span>
               <button
                 type="button"
                 onClick={() => removeTitle(title)}

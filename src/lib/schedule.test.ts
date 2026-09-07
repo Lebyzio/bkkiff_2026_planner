@@ -22,6 +22,7 @@ import {
   toMinutes,
   transitionGapMinutes,
   TIGHT_TRANSITION_MINUTES,
+  yearForTitle,
 } from "./schedule";
 import type { Screening } from "./types";
 
@@ -358,6 +359,17 @@ describe("isSingleScreening", () => {
 
   it("is false for a title that doesn't exist at all", () => {
     expect(isSingleScreening("Not A Real Movie")).toBe(false);
+  });
+});
+
+describe("yearForTitle", () => {
+  it("returns the year of a real screening's title", () => {
+    const [s] = SCREENINGS.filter((s) => s.year != null);
+    expect(yearForTitle(s.title)).toBe(s.year);
+  });
+
+  it("returns null for a title that doesn't exist", () => {
+    expect(yearForTitle("Not A Real Movie")).toBeNull();
   });
 });
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatDateShort, formatDuration, titleWithYear } from "@/lib/format";
+import { downloadPlanIcs } from "@/lib/exportPlanIcs";
 import { exportPlanPdf } from "@/lib/exportPlanPdf";
+import { buildPlanText } from "@/lib/exportPlanText";
 import { findDuplicateTitle, findTightTransition, isSingleScreening, VENUE_BY_ID } from "@/lib/schedule";
 import type { Screening } from "@/lib/types";
 import { DuplicateTitleBadge } from "./DuplicateTitleBadge";
@@ -21,6 +23,7 @@ interface PlanDrawerProps {
 
 export function PlanDrawer({ open, onClose, screenings, conflicts, onRemove, onClear }: PlanDrawerProps) {
   const [exportState, setExportState] = useState<"idle" | "exporting" | "error">("idle");
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
 
   useEffect(() => {
     if (!open) return;
@@ -57,6 +60,23 @@ export function PlanDrawer({ open, onClose, screenings, conflicts, onRemove, onC
     } catch (err) {
       console.error("Failed to export plan as PDF", err);
       setExportState("error");
+    }
+  }
+
+  function handleExportIcs() {
+    downloadPlanIcs(screenings);
+  }
+
+  async function handleCopyText() {
+    const text = buildPlanText(screenings, conflicts);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyState("copied");
+      setTimeout(() => setCopyState("idle"), 2000);
+    } catch (err) {
+      console.error("Failed to copy plan as text", err);
+      setCopyState("error");
+      setTimeout(() => setCopyState("idle"), 2000);
     }
   }
 
@@ -184,6 +204,24 @@ export function PlanDrawer({ open, onClose, screenings, conflicts, onRemove, onC
                 สร้าง PDF ไม่สำเร็จ ลองอีกครั้ง
               </p>
             )}
+            <button
+              type="button"
+              onClick={handleExportIcs}
+              className="transition-standard w-full rounded-md border border-border py-2 text-xs font-semibold text-text hover:border-accent hover:text-accent"
+            >
+              ดาวน์โหลดเป็นปฏิทิน (.ics)
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyText}
+              className="transition-standard w-full rounded-md border border-border py-2 text-xs font-semibold text-text hover:border-accent hover:text-accent"
+            >
+              {copyState === "copied"
+                ? "คัดลอกแล้ว!"
+                : copyState === "error"
+                  ? "คัดลอกไม่สำเร็จ ลองอีกครั้ง"
+                  : "คัดลอกแผนเป็นข้อความ"}
+            </button>
             <button
               type="button"
               onClick={onClear}

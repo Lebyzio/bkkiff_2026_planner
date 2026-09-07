@@ -61,7 +61,7 @@ export function FilterBar({ filters, setFilters, allTitles, resultCount, onReset
   }
 
   return (
-    <div className="border-b border-border-soft bg-bg-elevated/95 backdrop-blur">
+    <div className="relative z-30 border-b border-border-soft bg-bg-elevated/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>

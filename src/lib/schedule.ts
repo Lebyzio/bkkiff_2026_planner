@@ -21,6 +21,17 @@ export function isSingleScreening(title: string): boolean {
   return SCREENING_COUNT_BY_TITLE.get(title) === 1;
 }
 
+const YEAR_BY_TITLE: Map<string, number | null> = (() => {
+  const map = new Map<string, number | null>();
+  for (const s of SCREENINGS) if (!map.has(s.title)) map.set(s.title, s.year);
+  return map;
+})();
+
+/** The release year for a movie title, for display where only the bare title is on hand (e.g. the filter combobox). */
+export function yearForTitle(title: string): number | null {
+  return YEAR_BY_TITLE.get(title) ?? null;
+}
+
 export const TIME_OF_DAY_LABEL: Record<TimeOfDay, string> = {
   morning: "เช้า",
   afternoon: "บ่าย",
