@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #121014;
+  --color-bg-elevated: #1b1820;
+  --color-bg-ticket: #201d26;
+  --color-border: #34303d;
+  --color-border-soft: #29262f;
+  --color-text: #f3efe9;
+  --color-text-muted: #a79faa;
+  --color-accent: #e8b84b;
+  --color-accent-ink: #1c1509;
+  --color-danger: #ff6452;
+  --color-qna: #e0263f;
+  --color-warning: #f2994a;
+  --color-warning-ink: #3a1f04;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-bg-ticket: var(--color-bg-ticket);
+  --color-border: var(--color-border);
+  --color-border-soft: var(--color-border-soft);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-danger: var(--color-danger);
+  --color-qna: var(--color-qna);
+  --color-warning: var(--color-warning);
+  --color-warning-ink: var(--color-warning-ink);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .transition-standard {
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      transform 150ms ease,
+      opacity 150ms ease;
+  }
+}
+
+/* Ticket-stub punch holes: two circles the color of the page background,
+   sitting on top of the perforated divider to look like a torn ticket edge. */
+.ticket-perforation {
+  position: relative;
+  border-left: 1px dashed var(--color-border);
+}
+
+.ticket-perforation::before,
+.ticket-perforation::after {
+  content: "";
+  position: absolute;
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--color-bg);
+}
+
+.ticket-perforation::before {
+  top: -7px;
+}
+
+.ticket-perforation::after {
+  bottom: -7px;
+}
+
+/* Custom scrollbar for the horizontally-scrolling filter row on mobile. */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+
+/* Overview grid: keep the horizontal scrollbar visible (dates are wide) but
+   hide the vertical one — scrolling still works, its thumb/track just aren't
+   drawn. `width` sizes the vertical scrollbar, `height` the horizontal one.
+   Touching ::-webkit-scrollbar at all opts the element out of the native
+   theme, so the thumb needs an explicit color or the horizontal bar renders
+   as blank reserved space instead of the browser's normal-looking scrollbar. */
+.hide-vertical-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 10px;
+}
+
+.hide-vertical-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+
+.hide-vertical-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
